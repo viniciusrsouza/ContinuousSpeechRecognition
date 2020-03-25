@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">LivoxSpeechRecognition</string>
     <string name="play">Play</string>
+    <string name="minimum_utterance_length">Minimum utterance length:</string>
+    <string name="silence_timeout">Silence Timeout:</string>
+    <string name="tts">TTS:</string>
+    <string name="language">Language:</string>
+    <string name="amount_of_results">Amount of results</string>
+    <string name="reload_engine">Reload Engine</string>
+    <string name="hello_world">Hello, World!</string>
 </resources>

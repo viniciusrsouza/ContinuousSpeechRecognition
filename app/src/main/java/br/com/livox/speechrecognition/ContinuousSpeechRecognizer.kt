@@ -35,6 +35,11 @@ private constructor(
         } else throw RecognitionNotAvailableException()
     }
 
+    fun destroy() {
+        isListening = false
+        recognizer?.destroy()
+    }
+
     fun stopListening() {
         isListening = false
         recognizer?.stopListening()
@@ -45,6 +50,7 @@ private constructor(
     }
 
     class Builder(private val context: Context) : RecognitionListener {
+        private var minimumUtteranceLength: Int = 0
         private var timeoutOnSilence: Int = 0
         private val recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
         private var language: String = ""
@@ -81,6 +87,11 @@ private constructor(
             return this
         }
 
+        fun setMinimumUtteranceLength(minimumUtteranceLength: Int): Builder {
+            this.minimumUtteranceLength = minimumUtteranceLength
+            return this
+        }
+
         fun requestPermissions(activity: Activity): Builder {
             if (lacksPermissions()) {
                 ActivityCompat.requestPermissions(
@@ -99,6 +110,10 @@ private constructor(
         }
 
         fun build(): ContinuousSpeechRecognizer {
+            Log.d(
+                "SpeechListener",
+                "maxResults: $maxResults, language: $language, timeoutOnSilence: $timeoutOnSilence, minimumLength: $minimumUtteranceLength"
+            )
             if (maxResults == 0) maxResults = 3
             if (language.isEmpty()) language = "en"
 
@@ -111,6 +126,20 @@ private constructor(
                 RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
                 language
             )
+
+            if (timeoutOnSilence != 0) {
+                recognizerIntent.putExtra(
+                    RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
+                    timeoutOnSilence
+                )
+            }
+
+            if (minimumUtteranceLength != 0) {
+                recognizerIntent.putExtra(
+                    RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS,
+                    minimumUtteranceLength
+                )
+            }
 
             return recognizer
         }

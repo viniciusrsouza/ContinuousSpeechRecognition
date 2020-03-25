@@ -26,13 +26,97 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/spoken_text_label" />
 
-    <TextView
-        android:id="@+id/language"
+    <Button
+        android:id="@+id/reload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:text="@string/reload_engine"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/minimum_utterance_length"
+            android:textColor="#000"
+            android:textSize="18sp"
+            android:labelFor="@id/edit_minimum_length"/>
+
+        <EditText
+            android:id="@+id/edit_minimum_length"
+            android:layout_width="256dp"
+            android:layout_height="wrap_content"
+            android:autofillHints=""
+            android:inputType="number" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@id/edit_silence_timeout"
+            android:text="@string/silence_timeout"
+            android:textColor="#000"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/edit_silence_timeout"
+            android:layout_width="256dp"
+            android:layout_height="wrap_content"
+            android:autofillHints=""
+            android:inputType="number" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@id/edit_amount_of_results"
+            android:text="@string/amount_of_results"
+            android:textColor="#000"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/edit_amount_of_results"
+            android:layout_width="256dp"
+            android:layout_height="wrap_content"
+            android:autofillHints=""
+            android:inputType="number" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@id/edit_tts"
+            android:text="@string/tts"
+            android:textColor="#000"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/edit_tts"
+            android:layout_width="256dp"
+            android:layout_height="wrap_content"
+            android:autofillHints="@string/tts"
+            android:inputType="text"
+            android:text="@string/hello_world"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/language"
+            android:textColor="#000"
+            android:textSize="18sp" />
+
+        <Spinner
+            android:id="@+id/spinner_language"
+            android:layout_width="256dp"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
