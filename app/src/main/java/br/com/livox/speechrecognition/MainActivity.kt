@@ -1,5 +1,6 @@
 package br.com.livox.speechrecognition
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -19,14 +20,18 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var selectedLanguage: String = "default"
     private lateinit var speechRecognizer: ContinuousSpeechRecognizer
 
-    var textToSpeech: TextToSpeech? = null
+    private var textToSpeech: TextToSpeech?
+        get() = (application as App).tts
+        set(value) {
+            (application as App).tts = value
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         speechRecognizer = buildRecognizer()
-        textToSpeech = buildTTS()
+        if (textToSpeech == null) textToSpeech = buildTTS()
 
         initViews()
 
@@ -41,11 +46,14 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             speechRecognizer = buildRecognizer()
             speechRecognizer.startListening()
             textToSpeech?.stop()
-            textToSpeech = buildTTS()
         }
 
         button.setOnClickListener {
             speak()
+        }
+
+        btn_edit_tts.setOnClickListener {
+            startActivity(Intent(this, TTSActivity::class.java))
         }
     }
 
@@ -54,15 +62,9 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun buildTTS(): TextToSpeech {
-        return TextToSpeech(this) { status ->
+        return TextToSpeech(applicationContext) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                val language =
-                    if (selectedLanguage == "default") Locale.getDefault()
-                        .toString() else selectedLanguage
-                val split = language.split("_")
-                val lang = split[0]
-                val country = split[1]
-                textToSpeech?.language = Locale(lang, country)
+                textToSpeech?.language = Locale.getDefault()
             }
         }
     }
@@ -103,7 +105,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         val minimumLengthText = edit_minimum_length.text.toString()
         val minimumLength = if (minimumLengthText.isNotEmpty()) minimumLengthText.toInt() else 0
 
-        Log.d(TAG, "Reloading: { Language: $language, maxResults: $maxResults, silenceTimeout: $silenceTimeout, minimumLength: $minimumLength}")
+        Log.d(
+            TAG,
+            "Reloading: { Language: $language, maxResults: $maxResults, silenceTimeout: $silenceTimeout, minimumLength: $minimumLength}"
+        )
 
         return ContinuousSpeechRecognizer.Builder(this)
             .setLanguage(language)
