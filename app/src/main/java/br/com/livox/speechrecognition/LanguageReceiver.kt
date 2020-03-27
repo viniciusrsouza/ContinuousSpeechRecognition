@@ -6,7 +6,11 @@ import android.content.Intent
 import android.speech.RecognizerIntent
 import android.util.Log
 
-
+/**
+ * Receiver for list of supported languages of a SpeechRecognizer
+ * @param callback: callback function invoked with the list of
+ * supported languages
+ */
 class LanguageReceiver(val callback: (List<String>?) -> Unit): BroadcastReceiver() {
     private var supportedLanguages: List<String>? = null
 

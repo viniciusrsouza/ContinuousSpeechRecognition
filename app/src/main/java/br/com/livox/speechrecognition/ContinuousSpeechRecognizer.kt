@@ -13,6 +13,10 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
+/**
+ * Class that wraps a [SpeechRecognizer] to make it
+ * listen continuously.
+ */
 class ContinuousSpeechRecognizer
 private constructor(
     private val context: Context,
@@ -22,11 +26,18 @@ private constructor(
     private var isListening = false
     private var recognizer: SpeechRecognizer? = null
 
+    /**
+     * starts the recognition service
+     */
     fun startListening() {
         isListening = true
         recognizer?.startListening(recognizerIntent)
     }
 
+    /**
+     * destroys the [SpeechRecognizer] instance and
+     * recreates it.
+     */
     fun reloadSpeechRecognizer() {
         recognizer?.destroy()
         recognizer = SpeechRecognizer.createSpeechRecognizer(context)
@@ -35,11 +46,18 @@ private constructor(
         } else throw RecognitionNotAvailableException()
     }
 
+    /**
+     * destroy the [SpeechRecognizer] instance
+     */
     fun destroy() {
         isListening = false
         recognizer?.destroy()
     }
 
+    /**
+     * stops the [SpeechRecognizer] instance but
+     * keeps it to restart listening later
+     */
     fun stopListening() {
         isListening = false
         recognizer?.stopListening()
@@ -49,6 +67,10 @@ private constructor(
         reloadSpeechRecognizer()
     }
 
+    /**
+     * BuilderClass to wrap all the settings required
+     * for the [SpeechRecognizer]
+     */
     class Builder(private val context: Context) : RecognitionListener {
         private var minimumUtteranceLength: Int = 0
         private var timeoutOnSilence: Int = 0
@@ -67,31 +89,57 @@ private constructor(
             )
         }
 
+        /**
+         * sets the listening language of the [SpeechRecognizer]
+         * @param language: language in the format ll-RR where
+         * l = language, R = Region
+         */
         fun setLanguage(language: String): Builder {
             this.language = language
             return this
         }
 
+        /**
+         * sets the maximum results provided by the [SpeechRecognizer]
+         */
         fun setMaxResults(maxResults: Int): Builder {
             this.maxResults = maxResults
             return this
         }
 
+        /**
+         * sets the recognition listener.
+         */
         fun setRecognitionListener(listener: RecognitionListener): Builder {
             this.listener = listener
             return this
         }
 
+        /**
+         * sets the time, in milliseconds, that the [SpeechRecognizer]
+         * will wait when there's no speech to understand that the
+         * speech has finished.
+         * Experimental
+         */
         fun setTimeoutOnSilence(timeoutOnSilence: Int): Builder {
             this.timeoutOnSilence = timeoutOnSilence
             return this
         }
 
+        /**
+         * sets the minimum time that the [SpeechRecognizer] will
+         * record.
+         * Experimental
+         */
         fun setMinimumUtteranceLength(minimumUtteranceLength: Int): Builder {
             this.minimumUtteranceLength = minimumUtteranceLength
             return this
         }
 
+        /**
+         * Requests permissions for recording audio if it's
+         * not already provided.
+         */
         fun requestPermissions(activity: Activity): Builder {
             if (lacksPermissions()) {
                 ActivityCompat.requestPermissions(
@@ -103,12 +151,21 @@ private constructor(
             return this
         }
 
+        /**
+         * checks if Audio recording permissions were already
+         * provided
+         * @return true if it lacks permissions
+         */
         private fun lacksPermissions(): Boolean {
             val permissionCheck =
                 ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
             return permissionCheck == PackageManager.PERMISSION_DENIED
         }
 
+        /**
+         * assemble preset parameters into an instance of
+         * a [ContinuousSpeechRecognizer]
+          */
         fun build(): ContinuousSpeechRecognizer {
             Log.d(
                 "SpeechListener",
@@ -172,6 +229,9 @@ private constructor(
             listener?.onEndOfSpeech()
         }
 
+        /**
+         * reloads and restarts the recognizer onError.
+         */
         override fun onError(error: Int) {
             listener?.onError(error)
             logError(error)
@@ -181,6 +241,9 @@ private constructor(
             }
         }
 
+        /**
+         * restarts the recognizer onResult.
+         */
         override fun onResults(results: Bundle?) {
             listener?.onResults(results)
             if (recognizer.isListening) {
