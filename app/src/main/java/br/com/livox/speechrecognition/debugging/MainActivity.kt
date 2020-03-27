@@ -1,8 +1,10 @@
 package br.com.livox.speechrecognition.debugging
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -75,6 +77,17 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             null,
             null
         )
+
+        sw_mute_while_listening.setOnCheckedChangeListener { _, isChecked ->
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            if(isChecked) {
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_SHOW_UI)
+            } else {
+                val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                val index = (0.5 * maxVolume).toInt()
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, index, AudioManager.FLAG_VIBRATE)
+            }
+        }
     }
 
     private fun buildTTS(): TextToSpeech {
@@ -107,6 +120,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
+    // get field values and build recognizer
     private fun buildRecognizer(): ContinuousSpeechRecognizer {
         val maxResultsText = edit_amount_of_results.text.toString()
         val maxResults = if (maxResultsText.isNotEmpty()) maxResultsText.toInt() else 0
@@ -167,23 +181,45 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private val utteranceListener = object : UtteranceProgressListener() {
+        val TAG = "UtterListener"
         override fun onAudioAvailable(utteranceId: String?, audio: ByteArray?) {}
-        override fun onError(utteranceId: String?) {}
+        override fun onError(utteranceId: String?) {
+            Log.d(TAG,"onError $utteranceId")
+        }
         override fun onDone(utteranceId: String?) {
+            Log.d(TAG,"onDone $utteranceId")
+            if(sw_mute_while_listening.isChecked) {
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_VIBRATE)
+            }
             runOnUiThread {
                 speechRecognizer.startListening()
             }
         }
 
         override fun onStart(utteranceId: String?) {
+            Log.d(TAG,"onStart $utteranceId")
             runOnUiThread {
                 speechRecognizer.stopListening()
+            }
+            if(sw_mute_while_listening.isChecked) {
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                val index = (0.5 * maxVolume).toInt()
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, index, AudioManager.FLAG_VIBRATE)
             }
         }
 
         override fun onStop(utteranceId: String?, interrupted: Boolean) {
-            runOnUiThread {
-                speechRecognizer.startListening()
+            Log.d(TAG,"onStop $utteranceId, $interrupted")
+            if(!interrupted){
+                if(sw_mute_while_listening.isChecked) {
+                    val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_VIBRATE)
+                }
+                runOnUiThread {
+                    speechRecognizer.startListening()
+                }
             }
         }
     }

@@ -137,6 +137,13 @@
                     android:text="@string/use_frontal_speaker"
                     android:textColor="#000"
                     android:textSize="20sp" />
+                <Switch
+                    android:id="@+id/sw_mute_while_listening"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mute_while_listening"
+                    android:textColor="#000"
+                    android:textSize="20sp" />
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
