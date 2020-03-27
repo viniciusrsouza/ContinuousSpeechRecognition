@@ -1,17 +1,24 @@
-package br.com.livox.speechrecognition
+package br.com.livox.speechrecognition.debugging
 
+import android.app.Activity
 import android.content.Intent
+import android.media.AudioAttributes
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
+import br.com.livox.speechrecognition.ContinuousSpeechRecognizer
+import br.com.livox.speechrecognition.LanguageReceiver
+import br.com.livox.speechrecognition.R
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -33,7 +40,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         speechRecognizer = buildRecognizer()
         if (textToSpeech == null) textToSpeech = buildTTS()
 
-        initViews()
 
         Handler().postDelayed({
             //speechRecognizer.startListening()
@@ -55,10 +61,20 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         btn_edit_tts.setOnClickListener {
             startActivity(Intent(this, TTSActivity::class.java))
         }
-    }
-
-    private fun initViews() {
-        initLanguageSpinner()
+        val languageReceiver = LanguageReceiver { supportedLanguages ->
+            Log.d(TAG, supportedLanguages.toString())
+            if (supportedLanguages != null)
+                initLanguageSpinner(supportedLanguages)
+        }
+        sendOrderedBroadcast(
+            RecognizerIntent.getVoiceDetailsIntent(this),
+            null,
+            languageReceiver,
+            null,
+            Activity.RESULT_OK,
+            null,
+            null
+        )
     }
 
     private fun buildTTS(): TextToSpeech {
@@ -69,8 +85,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    private fun initLanguageSpinner() {
-        val list = listOf("default", "pt_BR", "en_US", "de_DE", "es_ES", "fr_FR")
+    private fun initLanguageSpinner(list: List<String>) {
         val adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_dropdown_item,
@@ -93,9 +108,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun buildRecognizer(): ContinuousSpeechRecognizer {
-        val language =
-            if (selectedLanguage == "default") Locale.getDefault().toString() else selectedLanguage
-
         val maxResultsText = edit_amount_of_results.text.toString()
         val maxResults = if (maxResultsText.isNotEmpty()) maxResultsText.toInt() else 0
 
@@ -107,11 +119,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         Log.d(
             TAG,
-            "Reloading: { Language: $language, maxResults: $maxResults, silenceTimeout: $silenceTimeout, minimumLength: $minimumLength}"
+            "Reloading: { Language: $selectedLanguage, maxResults: $maxResults, silenceTimeout: $silenceTimeout, minimumLength: $minimumLength}"
         )
 
         return ContinuousSpeechRecognizer.Builder(this)
-            .setLanguage(language)
+            .setLanguage(selectedLanguage)
             .setMaxResults(maxResults)
             .setRecognitionListener(this)
             .setTimeoutOnSilence(silenceTimeout)
@@ -124,6 +136,19 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val bundle = Bundle()
             bundle.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "stringId")
+            val audioAttributes = if (sw_use_frontal_speaker.isChecked) {
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build()
+            } else {
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build()
+            }
+            textToSpeech?.setAudioAttributes(audioAttributes)
+            textToSpeech?.setOnUtteranceProgressListener(utteranceListener)
             textToSpeech?.speak(edit_tts.text, TextToSpeech.QUEUE_FLUSH, bundle, "stringId")
         }
     }
@@ -139,6 +164,28 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         Log.d(TAG, "onResume")
         speechRecognizer.reloadSpeechRecognizer()
         speechRecognizer.startListening()
+    }
+
+    private val utteranceListener = object : UtteranceProgressListener() {
+        override fun onAudioAvailable(utteranceId: String?, audio: ByteArray?) {}
+        override fun onError(utteranceId: String?) {}
+        override fun onDone(utteranceId: String?) {
+            runOnUiThread {
+                speechRecognizer.startListening()
+            }
+        }
+
+        override fun onStart(utteranceId: String?) {
+            runOnUiThread {
+                speechRecognizer.stopListening()
+            }
+        }
+
+        override fun onStop(utteranceId: String?, interrupted: Boolean) {
+            runOnUiThread {
+                speechRecognizer.startListening()
+            }
+        }
     }
 
     override fun onReadyForSpeech(params: Bundle?) {}

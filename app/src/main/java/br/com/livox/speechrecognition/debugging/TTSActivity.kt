@@ -1,4 +1,4 @@
-package br.com.livox.speechrecognition
+package br.com.livox.speechrecognition.debugging
 
 import android.os.Build
 import android.os.Bundle
@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
+import br.com.livox.speechrecognition.R
 import kotlinx.android.synthetic.main.activity_config_tts.*
 import java.util.*
 
@@ -37,6 +38,7 @@ class TTSActivity : AppCompatActivity() {
             val ks = bundle.keySet()
             val array = ks.map { it to bundle[it].toString() }.toTypedArray()
             val map = hashMapOf(*array)
+            @Suppress("DEPRECATION")
             app.tts?.speak(text, TextToSpeech.QUEUE_FLUSH, map)
         }
     }

@@ -1,4 +1,4 @@
-package br.com.livox.speechrecognition
+package br.com.livox.speechrecognition.debugging
 
 import android.app.Application
 import android.speech.tts.TextToSpeech

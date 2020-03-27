@@ -123,7 +123,7 @@ private constructor(
             )
 
             recognizerIntent.putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
+                RecognizerIntent.EXTRA_LANGUAGE,
                 language
             )
 
